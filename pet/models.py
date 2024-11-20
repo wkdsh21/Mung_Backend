@@ -2,14 +2,6 @@ from django.db import models
 
 # Create your models here.
 
-
-class Users(models.Model):
-    username = models.CharField(max_length=50)
-    password = models.CharField(max_length=50)
-    profile_img_id = models.CharField(max_length=50)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-
 class Pets(models.Model):
     pet_id = models.IntegerField()
     name = models.CharField(max_length=50)
