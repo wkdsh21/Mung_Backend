@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # own_apps
     "pet.apps.AppConfig",
+    "member",
     # third_apps
 ]
 
@@ -124,3 +125,6 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# auth_user -> member_user
+AUTH_USER_MODEL = "member.Users"
