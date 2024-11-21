@@ -20,9 +20,11 @@ from django.contrib import admin
 from django.urls import path, re_path
 from ninja import NinjaAPI
 from pet.routers.pets_router import router as pets_router
+from member.routers.users_router import router as users_router
 
-api = NinjaAPI()
+api = NinjaAPI(csrf=True)
 api.add_router("/pet", pets_router)
+api.add_router("/users", users_router)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
