@@ -128,3 +128,15 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # auth_user -> member_user
 AUTH_USER_MODEL = "member.User"
+
+# REST framework의 기본 인증 클래스 설정
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
+
+# JWT 관련 설정 (optional, 원하는 대로 수정 가능)
+SIMPLE_JWT = {
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
