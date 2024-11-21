@@ -11,4 +11,4 @@ class UserCreateSchema(BaseModel):
 
     class Config:
         # Pydantic에서 Django 모델을 사용할 때, 임의의 타입을 허용하도록 설정
-        arbitrary_types_allowed = True
+        arbitrary_types_allowed = False
