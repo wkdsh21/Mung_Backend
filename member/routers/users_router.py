@@ -32,7 +32,7 @@ def signup(request, user: UserCreateSchema):
     )
     return {"message": "회원가입이 성공적으로 처리되었습니다.", "user_id": user.id}
 
-# @router.post("/login")
+# @router.post("/login")            # sessionid 없고 로그인 유지 안되는 버전
 # def login(request, username: str, password: str):
 #
 #     # 인증
@@ -44,6 +44,7 @@ def signup(request, user: UserCreateSchema):
 #         return {"access_token": access_token, "refresh_token": str(refresh)}
 #     return {"detail": "Invalid credentials"}, 422
 
+# sessionid 발신과 로그인 유지 버전
 @router.post("/login")
 def login_view(request, username: str, password: str):
     # 사용자를 인증합니다.
