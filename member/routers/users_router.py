@@ -5,7 +5,7 @@ from django.http import HttpRequest
 from django.contrib.auth import authenticate, login, logout
 
 from member.models import User
-from member.schemas.users_schema import UserInfoResponse, UserCreateRequest, UserLoginRequest, PasswordUpdateRequest, UserImgUpdateRequest  # Pydantic 모델을 임포트
+from member.schemas.users_schema import UserInfoResponse, UserCreateRequest, UserLoginRequest, PasswordUpdateRequest, UserImgUpdateRequest, UserDeleteRequest
 
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -81,3 +81,15 @@ def user_img_change(request: HttpRequest, image: UserImgUpdateRequest):
     user.user_img = image.user_img
     user.save()
     return 200, {"message": "유저 이미지 변경이 성공적으로 처리되었습니다.", "status": "success"}
+
+@router.delete("/", auth=django_auth)
+def delete_user(request: HttpRequest, pw: UserDeleteRequest):
+    user = User.objects.get(username=request.auth.username)
+    if user.check_password(pw.password):
+        user.delete()
+        logout(request)
+        return 200, {
+            "message": "회원탈퇴가 성공적으로 처리되었습니다.",
+            "status": "success",
+        }
+    return 200, {"message": "올바르지 않은 비밀번호 입니다.", "status": "fail"}
