@@ -1,10 +1,13 @@
-from django.db import models
 from django.conf import settings
+from django.contrib.auth.models import AnonymousUser
+from django.db import models
+
+from member.models import User
 
 # Create your models here.
 
+
 class Pets(models.Model):
-    pet_id = models.IntegerField()
     name = models.CharField(max_length=50)
     profile_img = models.CharField(max_length=255)
     type = models.CharField(max_length=50)
