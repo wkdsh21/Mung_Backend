@@ -2,6 +2,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import HttpRequest
 from ninja import Router
 from ninja.security import django_auth
+from rest_framework.request import Request
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
@@ -19,18 +20,22 @@ router = Router()
 
 
 @router.get("/", auth=django_auth, response={200: UserInfoResponse})
-def user_info(request: HttpRequest):
-    return 200, {"user_id": request.auth.username, "user_img": request.auth.user_img}
+def user_info(request: Request) -> tuple[int, dict[str, str]]:
+    user = request.user
+    return 200, {
+        "user_id": user.username,
+        "user_img": getattr(user, "user_img", "")
+    }
 
 
 # 회원가입 API
 @router.post("/signup")
-def signup(request, user: UserCreateRequest):
+def signup(request: HttpRequest, user: UserCreateRequest) -> tuple[int, dict[str, str]]:
     if User.objects.filter(username=user.user_id).exists():
         return 200, {"message": "User already exists", "status": "failed"}
     # Pydantic 모델에서 validated_data를 가져와서 User 생성
     user_data = user.dict()  # Pydantic 모델에서 dict로 변환
-    user = User.objects.create_user(
+    User.objects.create_user(
         username=user_data["user_id"],
         password=str(user_data["password"]),
         # email=user_data['email'],
@@ -56,7 +61,7 @@ def signup(request, user: UserCreateRequest):
 
 # sessionid 발신과 로그인 유지 버전
 @router.post("/login")
-def login_view(request, login_user: UserLoginRequest):
+def login_view(request: HttpRequest, login_user: UserLoginRequest) -> tuple[int, dict[str, str]]:
     l_user = login_user.dict()
     user = authenticate(username=l_user["user_id"], password=l_user["password"])  # 사용자를 인증합니다.
 
@@ -65,20 +70,20 @@ def login_view(request, login_user: UserLoginRequest):
 
         sessionid = request.session.session_key  # 세션 ID를 얻습니다.
 
-        return 200, {"sessionid": sessionid}  # 세션 ID를 클라이언트에게 반환합니다.
+        return 200, {"sessionid": str(sessionid)}  # 세션 ID를 클라이언트에게 반환합니다.
 
     return 200, {"detail": "Invalid credentials"}
 
 
 @router.get("/logout", auth=django_auth)
-def user_logout(request: HttpRequest):
+def user_logout(request: HttpRequest) -> tuple[int, dict[str, str]]:
     logout(request)
     return 200, {"message": "로그아웃 되었습니다."}
 
 
 @router.put("/pw_change", auth=django_auth)
-def pw_change(request: HttpRequest, password: PasswordUpdateRequest):
-    user = User.objects.get(username=request.auth.username)
+def pw_change(request: HttpRequest, password: PasswordUpdateRequest) -> tuple[int, dict[str, str]]:
+    user = User.objects.get(username=request.user)
     pw = password.dict()
     if user.check_password(pw["old_password"]):
         user.set_password(pw["new_password"])
@@ -88,16 +93,16 @@ def pw_change(request: HttpRequest, password: PasswordUpdateRequest):
 
 
 @router.put("/img_change", auth=django_auth)
-def user_img_change(request: HttpRequest, image: UserImgUpdateRequest):
-    user = User.objects.get(username=request.auth.username)
+def user_img_change(request: HttpRequest, image: UserImgUpdateRequest) -> tuple[int, dict[str, str]]:
+    user = User.objects.get(username=request.user)
     user.user_img = image.user_img
     user.save()
     return 200, {"message": "유저 이미지 변경이 성공적으로 처리되었습니다.", "status": "success"}
 
 
 @router.delete("/", auth=django_auth)
-def delete_user(request: HttpRequest, pw: UserDeleteRequest):
-    user = User.objects.get(username=request.auth.username)
+def delete_user(request: HttpRequest, pw: UserDeleteRequest) -> tuple[int, dict[str, str]]:
+    user = User.objects.get(username=request.user)
     if user.check_password(pw.password):
         user.delete()
         logout(request)
