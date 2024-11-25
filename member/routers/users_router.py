@@ -1,21 +1,19 @@
+from django.contrib.auth import authenticate, login, logout
+from django.http import HttpRequest
 from ninja import Router
 from ninja.security import django_auth
-
-from django.http import HttpRequest
-from django.contrib.auth import authenticate, login, logout
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from member.models import User
 from member.schemas.users_schema import (
-    UserInfoResponse,
-    UserCreateRequest,
-    UserLoginRequest,
     PasswordUpdateRequest,
-    UserImgUpdateRequest,
+    UserCreateRequest,
     UserDeleteRequest,
+    UserImgUpdateRequest,
+    UserInfoResponse,
+    UserLoginRequest,
 )
-
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView
 
 router = Router()
 

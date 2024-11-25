@@ -1,6 +1,11 @@
 # member/forms.py
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm
+from django.contrib.auth.forms import (
+    AuthenticationForm,
+    PasswordChangeForm,
+    UserCreationForm,
+)
+
 from .models import User  # 커스터마이즈한 User 모델
 
 
