@@ -75,7 +75,7 @@ def pw_change(request: HttpRequest, password: PasswordUpdateRequest):
         return 200, {"message": "비밀번호 변경이 성공적으로 처리되었습니다.", "status": "success"}
     return 202, {"message": "올바르지 않은 비밀번호 입니다.", "status": "fail"}
 
-@router.put("/user_img_change", auth=django_auth)
+@router.put("/img_change", auth=django_auth)
 def user_img_change(request: HttpRequest, image: UserImgUpdateRequest):
     user = User.objects.get(username=request.auth.username)
     user.user_img = image.user_img
