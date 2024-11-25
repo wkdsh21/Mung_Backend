@@ -22,10 +22,7 @@ router = Router()
 @router.get("/", auth=django_auth, response={200: UserInfoResponse})
 def user_info(request: Request) -> tuple[int, dict[str, str]]:
     user = request.user
-    return 200, {
-        "user_id": user.username,
-        "user_img": getattr(user, "user_img", "")
-    }
+    return 200, {"user_id": user.username, "user_img": getattr(user, "user_img", "")}
 
 
 # 회원가입 API
