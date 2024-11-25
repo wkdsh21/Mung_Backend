@@ -19,6 +19,8 @@ def user_info(request: HttpRequest):
 # 회원가입 API
 @router.post("/signup")
 def signup(request, user: UserCreateRequest):
+    if User.objects.filter(username=user.user_id).exists():
+        return 200, {"message": "User already exists", "status": "failed"}
     # Pydantic 모델에서 validated_data를 가져와서 User 생성
     user_data = user.dict()  # Pydantic 모델에서 dict로 변환
     user = User.objects.create_user(
@@ -29,7 +31,7 @@ def signup(request, user: UserCreateRequest):
         # last_name=user_data['last_name'],
         # user_img=user_data['user_img'],
     )
-    return 200, {"message": "회원가입이 성공적으로 처리되었습니다.", "user_id": user.id}
+    return 200, {"message": "회원가입이 성공적으로 처리되었습니다.", "status": "success"}
 
 # @router.post("/login")            # sessionid 없고 로그인 유지 안되는 버전
 # def login(request, username: str, password: str):
