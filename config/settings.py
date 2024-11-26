@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-6*k+d24us0^4psz$%e_t#m15)@y-9rz4d=dkjk^9o)9c)_9(rv
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS: list[str] = []
 
 
 # Application definition
@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     # own_apps
-    "pet.apps.AppConfig",
+    "pet.apps.PetConfig",
     "member",
     # third_apps
 ]
@@ -110,11 +110,11 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Asia/Seoul"
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)

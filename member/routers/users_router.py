@@ -55,7 +55,6 @@ def signup(request: HttpRequest, user: UserCreateRequest) -> tuple[int, dict[str
 #         return {"access_token": access_token, "refresh_token": str(refresh)}
 #     return {"detail": "Invalid credentials"}, 422
 
-
 # sessionid 발신과 로그인 유지 버전
 @router.post("/login")
 def login_view(request: HttpRequest, login_user: UserLoginRequest) -> tuple[int, dict[str, str]]:
@@ -85,7 +84,10 @@ def pw_change(request: HttpRequest, password: PasswordUpdateRequest) -> tuple[in
     if user.check_password(pw["old_password"]):
         user.set_password(pw["new_password"])
         user.save()
-        return 200, {"message": "비밀번호 변경이 성공적으로 처리되었습니다.", "status": "success"}
+        return 200, {
+            "message": "비밀번호 변경이 성공적으로 처리되었습니다.",
+            "status": "success",
+        }
     return 202, {"message": "올바르지 않은 비밀번호 입니다.", "status": "fail"}
 
 
@@ -108,3 +110,8 @@ def delete_user(request: HttpRequest, pw: UserDeleteRequest) -> tuple[int, dict[
             "status": "success",
         }
     return 200, {"message": "올바르지 않은 비밀번호 입니다.", "status": "fail"}
+
+    return 200, {
+        "message": "유저 이미지 변경이 성공적으로 처리되었습니다.",
+        "status": "success",
+    }
