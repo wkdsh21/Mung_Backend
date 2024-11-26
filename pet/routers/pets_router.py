@@ -13,6 +13,7 @@ from pet.schemas.pets_schema import (
     PetGetCardResponse,
     PetGetGraphResponse,
     PetGetListResponse,
+    PetStatusMessage,
     PetUpdateRequest,
 )
 
@@ -27,7 +28,7 @@ def get_pets_list(request: HttpRequest) -> tuple[int, list[Pets]]:
     return 200, [pet for pet in pets]
 
 
-@router.post("/", response={201: dict}, auth=django_auth)
+@router.post("/", response={201: PetStatusMessage}, auth=django_auth)
 def create_pet(request: HttpRequest, pet_request: PetCreateRequest) -> tuple[int, dict[str, str]]:
     user = request.user
     assert isinstance(user, User)
@@ -42,7 +43,7 @@ def create_pet(request: HttpRequest, pet_request: PetCreateRequest) -> tuple[int
     }
 
 
-@router.put("/{int:id}", response={200: dict}, auth=django_auth)
+@router.put("/{int:id}", response={200: PetStatusMessage}, auth=django_auth)
 def update_pet(request: HttpRequest, pet_request: PetUpdateRequest, id: int) -> tuple[int, dict[str, str]]:
     user = request.user
     assert isinstance(user, User)
@@ -59,18 +60,18 @@ def update_pet(request: HttpRequest, pet_request: PetUpdateRequest, id: int) -> 
     return 200, {"message": "동물 수정이 성공하였습니다.", "status": "success"}
 
 
-@router.delete("/{int:id}", response={200: dict}, auth=django_auth)
+@router.delete("/{int:id}", response={200: PetStatusMessage, 409: PetStatusMessage}, auth=django_auth)
 def delete_pet(request: HttpRequest, id: int) -> tuple[int, dict[str, str]]:
     user = request.user
     assert isinstance(user, User)
     pet = get_object_or_404(Pets, id=id, user_id=user.id)
-    try:
-        pet.delete()
-    except ProtectedError:
+    if not pet.delete()[0]:
         return 409, {
-            "message": "Cannot delete this object because it is referenced by another object.",
+            "message": "Cannot delete this object.",
             "status": "error",
         }
+    user.pet_cnt -= 1
+    user.save()
     return 200, {"message": "동물 삭제가 성공하였습니다.", "status": "success"}
 
 

@@ -59,3 +59,8 @@ class PetGetGraphResponse(Schema):
 
     class Config:
         orm_mode = True
+
+
+class PetStatusMessage(Schema):
+    message: str
+    status: Literal["success", "error"]
