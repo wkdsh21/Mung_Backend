@@ -64,13 +64,13 @@ def delete_pet(request: HttpRequest, id: int) -> tuple[int, dict[str, str]]:
     user = request.user
     assert isinstance(user, User)
     pet = get_object_or_404(Pets, id=id, user_id=user.id)
-    try:
-        pet.delete()
-    except ProtectedError:
+    if not pet.delete()[0]:
         return 409, {
-            "message": "Cannot delete this object because it is referenced by another object.",
+            "message": "Cannot delete this object.",
             "status": "error",
         }
+    user.pet_cnt -= 1
+    user.save()
     return 200, {"message": "동물 삭제가 성공하였습니다.", "status": "success"}
 
 
