@@ -55,6 +55,7 @@ def signup(request: HttpRequest, user: UserCreateRequest) -> tuple[int, dict[str
 #         return {"access_token": access_token, "refresh_token": str(refresh)}
 #     return {"detail": "Invalid credentials"}, 422
 
+
 # sessionid 발신과 로그인 유지 버전
 @router.post("/login")
 def login_view(request: HttpRequest, login_user: UserLoginRequest) -> tuple[int, dict[str, str]]:
