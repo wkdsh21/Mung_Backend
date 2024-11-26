@@ -33,3 +33,7 @@ class PasswordUpdateRequest(BaseModel):
 
 class UserImgUpdateRequest(BaseModel):
     user_img: Literal["0", "1", "2", "3", "4", "5", "6"]
+
+
+class UserDeleteRequest(BaseModel):
+    password: str
