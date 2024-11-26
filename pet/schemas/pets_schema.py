@@ -1,16 +1,18 @@
 from datetime import datetime
+from typing import Annotated, Literal
 
+from annotated_types import Gt
 from ninja import Schema
 
 
 class PetCreateRequest(Schema):
-    animal_name: str
-    animal_img: str
-    animal_type: str
-    animal_species: str
+    name: str
+    profile_img: str
+    type: str
+    species: str
     is_neutering: bool
-    animal_born_in: datetime
-    animal_weight: float
+    birth_date: datetime
+    weight: Annotated[float, Gt(0)]
     need_diet: bool
 
     class Config:
@@ -18,22 +20,42 @@ class PetCreateRequest(Schema):
 
 
 class PetGetListResponse(Schema):
-    animal_name: str
-    animal_img: str
-    animal_type: str
-    animal_species: str
+    id: int
+    name: str
+    profile_img: str
+    type: str
+    species: str
     is_neutering: bool
-    animal_born_in: datetime
-    animal_weight: float
+    birth_date: datetime
+    need_diet: bool
+    weight: Annotated[float, Gt(0)]
 
     class Config:
         orm_mode = True
 
+
 class PetUpdateRequest(Schema):
-    animal_type: str
-    is_neutering: str
-    animal_born_in: datetime
-    animal_weight: float
+    type: str
+    is_neutering: bool
+    birth_date: datetime
+    need_diet: bool
+    weight: Annotated[float, Gt(0)]
+
+    class Config:
+        orm_mode = True
+
+
+class PetGetCardResponse(Schema):
+    name: str
+    profile_img: str
+
+    class Config:
+        orm_mode = True
+
+
+class PetGetGraphResponse(Schema):
+    last_modified_at: datetime
+    weight: float
 
     class Config:
         orm_mode = True
