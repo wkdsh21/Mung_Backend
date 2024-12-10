@@ -1,3 +1,5 @@
+from typing import Any
+
 import requests
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpRequest
@@ -46,6 +48,7 @@ def signup(request: HttpRequest, user: UserCreateRequest) -> tuple[int, dict[str
     )
     return 201, {"message": "회원가입이 성공적으로 처리되었습니다.", "status": "success"}
 
+
 @router.post("/login", response={200: dict, 400: dict})
 def login_view(request: HttpRequest, login_user: UserLoginRequest) -> tuple[int, dict[str, str]]:
     l_user = login_user.dict()
@@ -60,24 +63,26 @@ def login_view(request: HttpRequest, login_user: UserLoginRequest) -> tuple[int,
 
     return 400, {"detail": "잘못된 아이디 혹은 비밀번호"}
 
+
 @router.get(
     "/social/kakao/login",
-    description="Not available in swagger\nYou must go to http://127.0.0.1:8000/api/v1/users/social/kakao/login"
+    description="Not available in swagger\nYou must go to http://127.0.0.1:8000/api/v1/users/social/kakao/login",
 )
-def kakao_social_login(request):
+def kakao_social_login(request: HttpRequest) -> Any:
     return redirect(
         "https://kauth.kakao.com/oauth/authorize"
         f"?client_id={settings.KAKAO_REST_API_KEY}"
         f"&redirect_uri={settings.KAKAO_REDIRECT_URL}"
-        f"&response_type=code",     # callback: authrization_code
+        f"&response_type=code",  # callback: authrization_code
     )
+
 
 @router.get(
     "/social/kakao/callback",
     response={200: dict, 201: dict, 409: dict},
-    description="Not available in swagger\nYou must go to http://127.0.0.1:8000/api/v1/users/social/kakao/login"
+    description="Not available in swagger\nYou must go to http://127.0.0.1:8000/api/v1/users/social/kakao/login",
 )
-def kakao_social_callback(request):
+def kakao_social_callback(request: HttpRequest) -> tuple[int, dict[str, str]]:
     user_token = request.GET.get("code")
     token_request = requests.post(
         "https://kauth.kakao.com/oauth/token",
@@ -87,7 +92,7 @@ def kakao_social_callback(request):
             "redirect_uri": settings.KAKAO_REDIRECT_URL,
             "code": user_token,
         },
-        headers={"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"}
+        headers={"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"},
     )
 
     token_response_json = token_request.json()
@@ -98,8 +103,7 @@ def kakao_social_callback(request):
     access_token = token_response_json.get("access_token")
 
     profile_request = requests.get(
-        f"https://kapi.kakao.com/v2/user/me",
-        headers={"Authorization": f"Bearer {access_token}"}
+        f"https://kapi.kakao.com/v2/user/me", headers={"Authorization": f"Bearer {access_token}"}
     )
     if profile_request.status_code != 200:
         print(f"Profile Request Error: {profile_request.text}")
@@ -133,7 +137,6 @@ def kakao_social_callback(request):
     login(request, new_user)
     request.session.create()
     sessionid = request.session.session_key
-    print(sessionid)
     return 201, {"sessionid": str(sessionid)}
 
 
