@@ -14,3 +14,4 @@ class User(AbstractUser):
     ]
     user_img = models.CharField(max_length=10, choices=PROFILE_IMG_CHOICES, default="0")
     pet_cnt = models.IntegerField("pet_count", default=0)
+    social_provider = models.CharField(max_length=10, null=True, blank=True)
