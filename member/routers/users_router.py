@@ -1,11 +1,14 @@
+import requests
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpRequest
+from django.shortcuts import redirect
 from ninja import Router
 from ninja.security import django_auth
 from rest_framework.request import Request
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from config import settings
 from member.models import User
 from member.schemas.users_schema import (
     PasswordUpdateRequest,
@@ -16,7 +19,7 @@ from member.schemas.users_schema import (
     UserLoginRequest,
 )
 
-router = Router()
+router = Router(tags=["users"])
 
 
 @router.get("/", auth=django_auth, response={200: UserInfoResponse})
@@ -42,19 +45,79 @@ def signup(request: HttpRequest, user: UserCreateRequest) -> tuple[int, dict[str
     )
     return 201, {"message": "회원가입이 성공적으로 처리되었습니다.", "status": "success"}
 
+@router.get("/social/kakao/login")
+def kakao_social_login(request):
+    return redirect(
+        "https://kauth.kakao.com/oauth/authorize"
+        f"?client_id={settings.KAKAO_REST_API_KEY}"
+        f"&redirect_uri={settings.KAKAO_REDIRECT_URL}"
+        f"&response_type=code",     # callback: authrization_code
+    )
 
-# @router.post("/login")            # sessionid 없고 로그인 유지 안되는 버전
-# def login(request, username: str, password: str):
-#
-#     # 인증
-#     user = authenticate(username=username, password=password)
-#     if user is not None:
-#         # JWT 토큰 발급
-#         refresh = RefreshToken.for_user(user)
-#         access_token = str(refresh.access_token)
-#         return {"access_token": access_token, "refresh_token": str(refresh)}
-#     return {"detail": "Invalid credentials"}, 422
+@router.get(
+    "/social/kakao/callback",
+    response={201: dict, 409: dict},
+)
+def kakao_social_callback(request):
 
+    user_token = request.GET.get("code")
+    token_request = requests.get(
+        f"https://kauth.kakao.com/oauth/token"
+        f"?grant_type=authorization_code&client_id={settings.KAKAO_REST_API_KEY}"
+        f"&redirect_uri={settings.KAKAO_REDIRECT_URL}"
+        f"&code={user_token}",
+        {"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"}
+    )
+
+    token_response_json = token_request.json()
+    print(token_response_json)
+    error = token_response_json.get("error", None)
+    if error:
+        return 409, {"message": error, "status": "failed"}
+    access_token = token_response_json.get("access_token")
+
+    profile_request = requests.get(
+        f"https://kapi.kakao.com/v2/user/me",
+        {"Authorization": f"Bearer {access_token}"}
+    )
+
+    profile_json = profile_request.json()
+    print(profile_json)
+    user_subject = str(profile_json["id"])
+    email = profile_json["kakao_account"]["email"]
+
+
+
+    #
+    #     profile_response.raise_for_status()
+    #     if profile_response.is_success:
+    #         # 3) 사용자 정보 -> 회원가입/로그인
+    #         member_profile: dict = profile_response.json()
+    #         member_subject: str = str(member_profile["id"])
+    #
+    #         email: str = profile_response.json()["kakao_account"]["email"]
+    #         member: Member | None = member_repo.get_member_by_social_email(
+    #             social_provider=SocialProvider.KAKAO,
+    #             email=email
+    #         )
+    #
+    #         if member:  # 이미 가입된 사용자 -> 로그인
+    #             return JWTResponse(access_token=encode_access_token(username=member.username))
+    #         new_member = Member.social_signup(
+    #             social_provider=SocialProvider.KAKAO,
+    #             subject=member_subject,
+    #             email=email,
+    #         )
+    #         member_repo.save(new_member)
+    #
+    #         return JWTResponse(
+    #             access_token=encode_access_token(username=new_member.username),
+    #         )
+    #
+    # raise HTTPException(
+    #     status_code=status.HTTP_400_BAD_REQUEST,
+    #     detail="Kakao social login failed",
+    # )
 
 # sessionid 발신과 로그인 유지 버전
 @router.post("/login", response={200: dict, 400: dict})

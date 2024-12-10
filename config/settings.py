@@ -142,3 +142,6 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
+
+KAKAO_REST_API_KEY = "45e4e465d0171cf979fc9029dc57a8e4"
+KAKAO_REDIRECT_URL = "http://127.0.0.1:8000/api/v1/users/social/kakao/callback"
