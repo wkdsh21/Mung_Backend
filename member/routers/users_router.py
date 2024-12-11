@@ -1,11 +1,17 @@
+from typing import Any
+
+import requests
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpRequest
+from django.shortcuts import redirect
+from django.utils.crypto import get_random_string
 from ninja import Router
 from ninja.security import django_auth
 from rest_framework.request import Request
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from config import settings
 from member.models import User
 from member.schemas.users_schema import (
     PasswordUpdateRequest,
@@ -16,7 +22,7 @@ from member.schemas.users_schema import (
     UserLoginRequest,
 )
 
-router = Router()
+router = Router(tags=["users"])
 
 
 @router.get("/", auth=django_auth, response={200: UserInfoResponse})
@@ -43,20 +49,6 @@ def signup(request: HttpRequest, user: UserCreateRequest) -> tuple[int, dict[str
     return 201, {"message": "회원가입이 성공적으로 처리되었습니다.", "status": "success"}
 
 
-# @router.post("/login")            # sessionid 없고 로그인 유지 안되는 버전
-# def login(request, username: str, password: str):
-#
-#     # 인증
-#     user = authenticate(username=username, password=password)
-#     if user is not None:
-#         # JWT 토큰 발급
-#         refresh = RefreshToken.for_user(user)
-#         access_token = str(refresh.access_token)
-#         return {"access_token": access_token, "refresh_token": str(refresh)}
-#     return {"detail": "Invalid credentials"}, 422
-
-
-# sessionid 발신과 로그인 유지 버전
 @router.post("/login", response={200: dict, 400: dict})
 def login_view(request: HttpRequest, login_user: UserLoginRequest) -> tuple[int, dict[str, str]]:
     l_user = login_user.dict()
@@ -70,6 +62,82 @@ def login_view(request: HttpRequest, login_user: UserLoginRequest) -> tuple[int,
         return 200, {"sessionid": str(sessionid)}  # 세션 ID를 클라이언트에게 반환합니다.
 
     return 400, {"detail": "잘못된 아이디 혹은 비밀번호"}
+
+
+@router.get(
+    "/social/kakao/login",
+    description="Not available in swagger\nYou must go to http://127.0.0.1:8000/api/v1/users/social/kakao/login",
+)
+def kakao_social_login(request: HttpRequest) -> Any:
+    return redirect(
+        "https://kauth.kakao.com/oauth/authorize"
+        f"?client_id={settings.KAKAO_REST_API_KEY}"
+        f"&redirect_uri={settings.KAKAO_REDIRECT_URL}"
+        f"&response_type=code",  # callback: authrization_code
+    )
+
+
+@router.get(
+    "/social/kakao/callback",
+    response={200: dict, 201: dict, 409: dict},
+    description="Not available in swagger\nYou must go to http://127.0.0.1:8000/api/v1/users/social/kakao/login",
+)
+def kakao_social_callback(request: HttpRequest) -> tuple[int, dict[str, str]]:
+    user_token = request.GET.get("code")
+    token_request = requests.post(
+        "https://kauth.kakao.com/oauth/token",
+        data={
+            "grant_type": "authorization_code",
+            "client_id": settings.KAKAO_REST_API_KEY,
+            "redirect_uri": settings.KAKAO_REDIRECT_URL,
+            "code": user_token,
+        },
+        headers={"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"},
+    )
+
+    token_response_json = token_request.json()
+    if "error" in token_response_json:
+        print(f"Token Request Error: {token_response_json}")
+        return 409, {"message": token_response_json.get("error_description", "Unknown error"), "status": "failed"}
+
+    access_token = token_response_json.get("access_token")
+
+    profile_request = requests.get(
+        f"https://kapi.kakao.com/v2/user/me", headers={"Authorization": f"Bearer {access_token}"}
+    )
+    if profile_request.status_code != 200:
+        print(f"Profile Request Error: {profile_request.text}")
+        return 409, {"message": "Profile request failed", "status": "failed"}
+
+    profile_json = profile_request.json()
+    # print(profile_json)
+    user_subject = profile_json.get("id")
+    # print(user_subject)
+    kakao_account = profile_json.get("kakao_account", {})
+    # print(kakao_account)
+    email = kakao_account.get("email")
+    if not email:
+        return 409, {"message": "Email not found in Kakao account", "status": "failed"}
+    profile = kakao_account.get("profile")
+    nickname = profile.get("nickname")
+    # profile_image_url = profile.get("profile_image_url")
+
+    if User.objects.filter(email=email, social_provider="kakao").exists():
+        login(request, User.objects.filter(email=email, social_provider="kakao")[0])
+        sessionid = request.session.session_key
+        return 200, {"sessionid": str(sessionid)}
+
+    new_user = User.objects.create_user(
+        username=f"#ka#{user_subject}",
+        password="".join(get_random_string(length=16)),
+        email=email,
+        first_name=nickname,
+        social_provider="kakao",
+    )
+    login(request, new_user)
+    request.session.create()
+    sessionid = request.session.session_key
+    return 201, {"sessionid": str(sessionid)}
 
 
 @router.get("/logout", auth=django_auth, response={200: dict})
