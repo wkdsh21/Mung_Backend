@@ -64,3 +64,7 @@ class PetGetGraphResponse(Schema):
 class PetStatusMessage(Schema):
     message: str
     status: Literal["success", "error"]
+
+
+class PetPatchNameRequest(Schema):
+    name: str

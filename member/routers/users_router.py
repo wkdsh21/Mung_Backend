@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import HttpRequest
 from django.shortcuts import redirect
 from django.utils.crypto import get_random_string
+from django.views.decorators.csrf import csrf_exempt
 from ninja import Router
 from ninja.security import django_auth
 from rest_framework.request import Request

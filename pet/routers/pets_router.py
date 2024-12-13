@@ -13,6 +13,7 @@ from pet.schemas.pets_schema import (
     PetGetCardResponse,
     PetGetGraphResponse,
     PetGetListResponse,
+    PetPatchNameRequest,
     PetStatusMessage,
     PetUpdateRequest,
 )
@@ -20,7 +21,7 @@ from pet.schemas.pets_schema import (
 router = Router()
 
 
-@router.get("/", response={200: list[PetGetListResponse]}, auth=django_auth)
+@router.get("/", response={200: list[PetGetListResponse]})
 def get_pets_list(request: HttpRequest) -> tuple[int, list[Pets]]:
     user = request.user
     assert isinstance(user, User)
@@ -58,6 +59,16 @@ def update_pet(request: HttpRequest, pet_request: PetUpdateRequest, id: int) -> 
     except PetsWeights.DoesNotExist:
         PetsWeights.objects.create(weight=pet.weight, pet=pet)
     return 200, {"message": "동물 수정이 성공하였습니다.", "status": "success"}
+
+
+@router.patch("/{int:id}", response={200: PetStatusMessage}, auth=django_auth)
+def patch_pet_name(request: HttpRequest, namedict: PetPatchNameRequest, id: int) -> tuple[int, dict[str, str]]:
+    user = request.user
+    assert isinstance(user, User)
+    pet = get_object_or_404(Pets, user_id=user.id, id=id)
+    pet.name = namedict.name
+    pet.save()
+    return 200, {"message": "동물 이름 수정이 성공하였습니다.", "status": "success"}
 
 
 @router.delete("/{int:id}", response={200: PetStatusMessage, 409: PetStatusMessage}, auth=django_auth)
