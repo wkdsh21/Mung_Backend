@@ -21,7 +21,7 @@ from pet.schemas.pets_schema import (
 router = Router()
 
 
-@router.get("/", response={200: list[PetGetListResponse]})
+@router.get("/", response={200: list[PetGetListResponse]}, auth=django_auth)
 def get_pets_list(request: HttpRequest) -> tuple[int, list[Pets]]:
     user = request.user
     assert isinstance(user, User)
