@@ -9,9 +9,11 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
+
 import os
 from pathlib import Path
 
+from django.middleware.csrf import CSRF_ALLOWED_CHARS
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -27,10 +29,34 @@ SECRET_KEY = "django-insecure-6*k+d24us0^4psz$%e_t#m15)@y-9rz4d=dkjk^9o)9c)_9(rv
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS: list[str] = []
+ALLOWED_HOSTS: list[str] = ["*"]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.ngrok-free.app",
+    "http://localhost:5173",
+]
 
-# Application definition
+CORS_ALLOWED_ORIGINS = [
+    "https://*.ngrok-free.app",
+    "http://localhost:5173",
+]
+
+CSRF_COOKIE_HTTPONLY = False
+
+CSRF_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_ALL_ORIGINS = True
+
+ACCESS_CONTROL_ALLOW_ORIGINS = "*"
+
+CORS_ALLOW_HEADERS = "cookie"
+
+SESSION_COOKIE_DOMAIN = ".ngrok-free.app"  # ngrok 도메인에 맞춰서 설정
+CSRF_COOKIE_DOMAIN = ".ngrok-free.app"
+SESSION_COOKIE_SECURE = True  # HTTPS 사용 시
+SESSION_COOKIE_SAMESITE = "None"  # cross-site 요청 허용
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -44,9 +70,12 @@ INSTALLED_APPS = [
     "pet.apps.PetConfig",
     "member",
     # third_apps
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",  # 반드시 최상단에 추가
+    "django.middleware.common.CommonMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -148,3 +177,20 @@ SIMPLE_JWT = {
 load_dotenv()
 KAKAO_REST_API_KEY = os.getenv("KAKAO_REST_API_KEY")
 KAKAO_REDIRECT_URL = os.getenv("KAKAO_REDIRECT_URL")
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "loggers": {
+        "django.request": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+    },
+}

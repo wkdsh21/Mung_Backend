@@ -25,7 +25,7 @@ from ninja import NinjaAPI
 from member.routers.users_router import router as users_router
 from pet.routers.pets_router import router as pets_router
 
-api = NinjaAPI(csrf=True)
+api = NinjaAPI(csrf=False)
 api.add_router("/pet", pets_router)
 api.add_router("/users", users_router)
 

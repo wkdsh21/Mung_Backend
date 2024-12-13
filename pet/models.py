@@ -10,7 +10,7 @@ from member.models import User
 class Pets(models.Model):
     name = models.CharField(max_length=50)
     profile_img = models.CharField(max_length=255)
-    type = models.CharField(max_length=50)
+    type = models.CharField(max_length=50)  # 강아지,고양이
     species = models.CharField(max_length=50)
     is_neutering = models.BooleanField()
     birth_date = models.DateField()
